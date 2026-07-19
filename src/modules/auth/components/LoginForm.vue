@@ -11,11 +11,13 @@ import { validateLoginForm } from '../validation/login.validation'
 interface Props {
   isLoading?: boolean
   errorMessage?: string
+  successMessage?: string
 }
 
 withDefaults(defineProps<Props>(), {
   isLoading: false,
   errorMessage: '',
+  successMessage: '',
 })
 
 const emit = defineEmits<{
@@ -40,6 +42,7 @@ function handleSubmit(): void {
 <template>
   <form class="grid gap-5" novalidate @submit.prevent="handleSubmit">
     <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
+    <Message v-if="successMessage" severity="success" :closable="false">{{ successMessage }}</Message>
 
     <div class="grid gap-2">
       <label class="text-sm font-semibold text-[#203d37]" for="email">Alamat email</label>

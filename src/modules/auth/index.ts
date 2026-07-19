@@ -1,3 +1,3 @@
 export { default as LoginPage } from './pages/LoginPage.vue'
-export type { LoginFormValues } from './types/auth.types'
-
+export { useAuthStore } from './stores/auth.store'
+export type { AuthUser, LoginFormValues, LoginResponse } from './types/auth.types'
