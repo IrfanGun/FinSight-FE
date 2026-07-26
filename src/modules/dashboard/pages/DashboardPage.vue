@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/modules/auth/stores/auth.store'
+import { listTransactions } from '@/modules/transactions'
+import type { Transaction } from '@/modules/transactions'
 import AssetOverview from '../components/AssetOverview.vue'
 import CashflowSummary from '../components/CashflowSummary.vue'
 import DashboardHeader from '../components/DashboardHeader.vue'
@@ -27,12 +29,36 @@ const proportions: ExpenseProportion[] = [
   { label: 'Transportasi', value: 18, colorClass: 'bg-amber-400' },
   { label: 'Lainnya', value: 19, colorClass: 'bg-slate-200' },
 ]
-const recentTransactions: RecentTransaction[] = [
-  { id: 1, merchant: 'Gaji Bulanan', category: 'Pemasukan', date: '30 Jun 2026', amount: 'Rp 12.500.000', type: 'income', icon: 'pi-arrow-down-left', iconClass: 'bg-emerald-100 text-emerald-700' },
-  { id: 2, merchant: 'Superindo', category: 'Kebutuhan', date: '29 Jun 2026', amount: 'Rp 485.000', type: 'expense', icon: 'pi-shopping-cart', iconClass: 'bg-orange-100 text-orange-700' },
-  { id: 3, merchant: 'Spotify', category: 'Lifestyle', date: '28 Jun 2026', amount: 'Rp 54.990', type: 'expense', icon: 'pi-music', iconClass: 'bg-violet-100 text-violet-700' },
-  { id: 4, merchant: 'Transport Online', category: 'Transportasi', date: '27 Jun 2026', amount: 'Rp 32.000', type: 'expense', icon: 'pi-car', iconClass: 'bg-blue-100 text-blue-700' },
-]
+const recentTransactions = ref<RecentTransaction[]>([])
+
+function mapTransaction(transaction: Transaction): RecentTransaction {
+  const type = transaction.type
+  return {
+    id: transaction.id,
+    merchant: transaction.from_account_name,
+    category: transaction.category_name,
+    date: transaction.transaction_date,
+    amount: new Intl.NumberFormat('id-ID').format(Number(transaction.amount)),
+    type,
+    icon: type === 'income' ? 'pi-arrow-down-left' : 'pi-shopping-cart',
+    iconClass: type === 'income' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700',
+  }
+}
+
+onMounted(async () => {
+  const userId = authStore.currentUser?.id
+  if (!userId) return
+
+  try {
+    const response = await listTransactions({ user_id: userId, page: 1, page_size: 5 })
+    recentTransactions.value = [...response.items]
+      .sort((left, right) => right.transaction_date.localeCompare(left.transaction_date))
+      .slice(0, 5)
+      .map(mapTransaction)
+  } catch {
+    recentTransactions.value = []
+  }
+})
 
 function handleSignOut(): void {
   authStore.signOut()

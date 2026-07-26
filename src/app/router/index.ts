@@ -17,8 +17,14 @@ export const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('@/modules/dashboard/pages/DashboardPage.vue'),
+      component: () => import('@/modules/dashboard/views/DashboardView.vue'),
       meta: { title: 'Dashboard | FinSight AI', requiresAuth: true },
+    },
+    {
+      path: '/transactions',
+      name: 'transactions.list',
+      component: () => import('@/modules/transactions/pages/TransactionListPage.vue'),
+      meta: { title: 'Transaksi | FinSight AI', requiresAuth: true },
     },
   ],
   scrollBehavior: () => ({ top: 0 }),
@@ -26,6 +32,7 @@ export const router = createRouter({
 
 router.beforeEach((to) => {
   const authStore = useAuthStore()
+  authStore.hydrate()
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'auth.login', query: { redirect: to.fullPath } }
