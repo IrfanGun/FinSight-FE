@@ -1,9 +1,9 @@
 import type { AssetSummary, CashflowSummary, ExpenseProportion } from '../types/dashboard.types'
 
 export const DASHBOARD_ASSETS: AssetSummary[] = [
-  { type: 'wallet', label: 'Wallet', amount: 'Rp 4.250.000', detail: 'Uang tunai', icon: 'pi-wallet', accentClass: 'bg-amber-100 text-amber-700' },
-  { type: 'bank', label: 'Bank', amount: 'Rp 18.750.000', detail: '2 rekening', icon: 'pi-building-columns', accentClass: 'bg-blue-100 text-blue-700' },
-  { type: 'investment', label: 'Investment', amount: 'Rp 32.500.000', detail: '3 portofolio', icon: 'pi-chart-line', accentClass: 'bg-brand-100 text-brand-700' },
+  { type: 'wallet', label: 'Wallet', amount: 'Rp 0', detail: '0 wallet', icon: 'pi-wallet', accentClass: 'bg-amber-100 text-amber-700' },
+  { type: 'bank', label: 'Bank', amount: 'Rp 0', detail: '0 rekening', icon: 'pi-building-columns', accentClass: 'bg-blue-100 text-blue-700' },
+  { type: 'investment', label: 'Investment', amount: 'Rp 0', detail: '0 portofolio', icon: 'pi-chart-line', accentClass: 'bg-brand-100 text-brand-700' },
 ]
 
 export const DASHBOARD_CASHFLOW: CashflowSummary = { income: 'Rp 12.500.000', expense: 'Rp 7.850.000', incomeChange: '+12,4%', expenseChange: '+4,8%' }

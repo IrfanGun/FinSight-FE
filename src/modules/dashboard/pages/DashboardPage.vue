@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/modules/auth/stores/auth.store'
 import { listTransactions } from '@/modules/transactions'
 import type { Transaction } from '@/modules/transactions'
+import { getAssetTotals } from '../api/asset.api'
 import AssetOverview from '../components/AssetOverview.vue'
 import CashflowSummary from '../components/CashflowSummary.vue'
 import DashboardHeader from '../components/DashboardHeader.vue'
@@ -16,11 +17,13 @@ const router = useRouter()
 const authStore = useAuthStore()
 const userName = computed(() => authStore.currentUser?.fullName ?? 'Pengguna')
 
-const assets: AssetSummary[] = [
-  { type: 'wallet', label: 'Wallet', amount: 'Rp 4.250.000', detail: 'Uang tunai', icon: 'pi-wallet', accentClass: 'bg-amber-100 text-amber-700' },
-  { type: 'bank', label: 'Bank', amount: 'Rp 18.750.000', detail: '2 rekening', icon: 'pi-building-columns', accentClass: 'bg-blue-100 text-blue-700' },
-  { type: 'investment', label: 'Investment', amount: 'Rp 32.500.000', detail: '3 portofolio', icon: 'pi-chart-line', accentClass: 'bg-brand-100 text-brand-700' },
-]
+const assets = ref<AssetSummary[]>([
+  { type: 'wallet', label: 'Wallet', amount: 'Rp 0', detail: 'Uang tunai', icon: 'pi-wallet', accentClass: 'bg-amber-100 text-amber-700' },
+  { type: 'bank', label: 'Bank', amount: 'Rp 0', detail: '0 rekening', icon: 'pi-building-columns', accentClass: 'bg-blue-100 text-blue-700' },
+  { type: 'investment', label: 'Investment', amount: 'Rp 0', detail: '0 portofolio', icon: 'pi-chart-line', accentClass: 'bg-brand-100 text-brand-700' },
+])
+
+const formatCurrency = (amount: number) => `Rp ${new Intl.NumberFormat('id-ID').format(amount)}`
 
 const cashflow: CashflowSummaryData = { income: 'Rp 12.500.000', expense: 'Rp 7.850.000', incomeChange: '+12,4%', expenseChange: '+4,8%' }
 const proportions: ExpenseProportion[] = [
@@ -50,6 +53,19 @@ onMounted(async () => {
   if (!userId) return
 
   try {
+    const assetTotals = await getAssetTotals(userId)
+    assets.value = assets.value.map((asset) => asset.type === 'wallet'
+      ? { ...asset, amount: formatCurrency(assetTotals.wallet), detail: `${assetTotals.walletCount} wallet` }
+      : asset.type === 'bank'
+      ? { ...asset, amount: formatCurrency(assetTotals.bank), detail: `${assetTotals.bankCount} rekening` }
+      : asset.type === 'investment'
+        ? { ...asset, amount: formatCurrency(assetTotals.investment), detail: `${assetTotals.investmentCount} portofolio` }
+        : asset)
+  } catch {
+    // Keep the fallback values when the assets endpoint is unavailable.
+  }
+
+  try {
     const response = await listTransactions({ user_id: userId, page: 1, page_size: 5 })
     recentTransactions.value = [...response.items]
       .sort((left, right) => right.transaction_date.localeCompare(left.transaction_date))
@@ -73,7 +89,7 @@ function handleSignOut(): void {
       <header><p class="mb-1 text-sm font-semibold text-brand-700">Dashboard</p><h1 class="m-0 text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">Ringkasan keuangan</h1><p class="mt-2 text-sm text-slate-500">Pantau kondisi keuangan Anda hari ini.</p></header>
       <AssetOverview :assets="assets" />
       <CashflowSummary :summary="cashflow" />
-      <div class="grid gap-6 lg:grid-cols-[1.15fr_.85fr] lg:items-start"><RecentTransactions :transactions="recentTransactions" /><ProportionIncomeExpenses :proportions="proportions" /></div>
+      <div class="grid gap-6 lg:grid-cols-[1.15fr_.85fr] lg:items-start"><RecentTransactions :transactions="recentTransactions" /><ProportionIncomeExpenses :proportions="{ expenses: [], incomes: [], assets: [] }" /></div>
     </main>
   </div>
 </template>
