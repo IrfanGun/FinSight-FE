@@ -18,6 +18,7 @@ const emit = defineEmits<{ signOut: [] }>()
     </a>
     <div class="flex items-center gap-3">
       <span class="hidden text-sm text-slate-500 sm:inline">Halo, {{ userName }}</span>
+      <Button label="Chat" icon="pi pi-comments" size="small" @click="$router.push({ name: 'chat' })" />
       <Button aria-label="Keluar" icon="pi pi-sign-out" severity="secondary" text rounded @click="emit('signOut')" />
     </div>
   </header>

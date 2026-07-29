@@ -26,6 +26,12 @@ export const router = createRouter({
       component: () => import('@/modules/transactions/pages/TransactionListPage.vue'),
       meta: { title: 'Transaksi | FinSight AI', requiresAuth: true },
     },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('@/modules/chat/views/ChatView.vue'),
+      meta: { title: 'Chat | FinSight AI', requiresAuth: true },
+    },
   ],
   scrollBehavior: () => ({ top: 0 }),
 })
