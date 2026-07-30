@@ -1,9 +1,25 @@
 import { ref } from 'vue'
 
+import { useAuthStore } from '@/modules/auth/stores/auth.store'
 import { sendChatMessage } from '../api/chat.api'
-import type { ChatMessage } from '../types/chat.types'
+import { createFinanceAccount } from '../api/finance-account.api'
+import type { ChatMessage, CreateFinanceAccountRequest, SendChatMessageRequest } from '../types/chat.types'
+
+const CASH_ACCOUNT_REQUEST: Omit<CreateFinanceAccountRequest, 'user_id'> = {
+  name: 'Cash',
+  type: 'asset',
+  subtype: 'cash',
+  currency: 'IDR',
+  balance: 0,
+  is_active: true,
+}
+
+function needsAccountCreationConfirmation(message: string): boolean {
+  return /belum ditemukan/i.test(message) && /ingin membuat akun\/aset/i.test(message)
+}
 
 export function useChat() {
+  const authStore = useAuthStore()
   const input = ref('')
   const isLoading = ref(false)
   const errorMessage = ref('')
@@ -22,11 +38,22 @@ export function useChat() {
     isLoading.value = true
 
     try {
-      const response = await sendChatMessage({ message, conversation_id: conversationId.value })
+      const request: SendChatMessageRequest = { message }
+      if (conversationId.value !== undefined) {
+        request.conversation_id = conversationId.value
+      }
+
+      const response = await sendChatMessage(request)
       conversationId.value = response.conversation_id
 
-      if (response.success) {
-        messages.value.push({ id: crypto.randomUUID(), role: 'assistant', content: response.message })
+      const requiresConfirmation = needsAccountCreationConfirmation(response.message)
+      if (response.success || requiresConfirmation) {
+        messages.value.push({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: response.message,
+          requiresAccountCreationConfirmation: requiresConfirmation,
+        })
       } else {
         errorMessage.value = response.message
       }
@@ -37,5 +64,34 @@ export function useChat() {
     }
   }
 
-  return { input, isLoading, errorMessage, messages, handleSend }
+  async function handleAccountCreationConfirmation(messageId: string, confirmed: boolean): Promise<void> {
+    const message = messages.value.find((item) => item.id === messageId)
+    if (!message || !message.requiresAccountCreationConfirmation || isLoading.value) return
+
+    message.requiresAccountCreationConfirmation = false
+    if (!confirmed) {
+      messages.value.push({ id: crypto.randomUUID(), role: 'assistant', content: 'Baik, akun Cash tidak dibuat.' })
+      return
+    }
+
+    const userId = authStore.currentUser?.id
+    if (!userId) {
+      errorMessage.value = 'Sesi pengguna tidak ditemukan. Silakan masuk kembali.'
+      return
+    }
+
+    isLoading.value = true
+    errorMessage.value = ''
+    try {
+      const account = await createFinanceAccount({ ...CASH_ACCOUNT_REQUEST, user_id: userId })
+      messages.value.push({ id: crypto.randomUUID(), role: 'assistant', content: `Akun '${account.name}' berhasil dibuat.` })
+    } catch (error: unknown) {
+      message.requiresAccountCreationConfirmation = true
+      errorMessage.value = error instanceof Error ? error.message : 'Akun gagal dibuat. Silakan coba lagi.'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return { input, isLoading, errorMessage, messages, handleSend, handleAccountCreationConfirmation }
 }

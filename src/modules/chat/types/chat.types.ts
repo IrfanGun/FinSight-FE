@@ -12,6 +12,25 @@ export interface ChatMessage {
   role: ChatMessageRole
   content: string
   responseRoute?: AiResponseRoute
+  requiresAccountCreationConfirmation?: boolean
+}
+
+export interface CreateFinanceAccountRequest {
+  user_id: number
+  name: string
+  type: 'asset'
+  subtype: 'cash'
+  currency: 'IDR'
+  balance: number
+  is_active: boolean
+}
+
+export interface FinanceAccount extends CreateFinanceAccountRequest {
+  id: number
+  unit: string | null
+  quantity: number | null
+  created_at: string
+  updated_at: string
 }
 
 export interface SendChatMessageRequest {

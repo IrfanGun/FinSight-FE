@@ -10,7 +10,7 @@ import { useChat } from '../composables/useChat'
 const router = useRouter()
 const authStore = useAuthStore()
 const userName = computed(() => authStore.currentUser?.fullName ?? 'Pengguna')
-const { input, isLoading, errorMessage, messages, handleSend } = useChat()
+const { input, isLoading, errorMessage, messages, handleSend, handleAccountCreationConfirmation } = useChat()
 
 function handleSignOut(): void {
   authStore.signOut()
@@ -43,6 +43,10 @@ function handleSignOut(): void {
           <div v-for="message in messages" :key="message.id" class="flex" :class="message.role === 'user' ? 'justify-end' : 'justify-start'">
             <div class="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed" :class="message.role === 'user' ? 'rounded-br-md bg-brand-700 text-white' : 'rounded-bl-md bg-slate-100 text-slate-700'">
               {{ message.content }}
+              <div v-if="message.requiresAccountCreationConfirmation" class="mt-3 flex gap-2">
+                <Button label="Ya" size="small" severity="success" :disabled="isLoading" @click="handleAccountCreationConfirmation(message.id, true)" />
+                <Button label="Tidak" size="small" severity="secondary" outlined :disabled="isLoading" @click="handleAccountCreationConfirmation(message.id, false)" />
+              </div>
             </div>
           </div>
           <div v-if="isLoading" class="flex justify-start"><div class="rounded-2xl rounded-bl-md bg-slate-100 px-4 py-3 text-sm text-slate-500">FinSight AI sedang mengetik…</div></div>

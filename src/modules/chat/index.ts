@@ -1,4 +1,5 @@
 export { default as ChatView } from './views/ChatView.vue'
 export { sendChatMessage } from './api/chat.api'
+export { createFinanceAccount } from './api/finance-account.api'
 export { useChat } from './composables/useChat'
-export type { AiChatResponse, AiResponseRoute, ChatMessage, ChatMessageRole, SendChatMessageRequest } from './types/chat.types'
+export type { AiChatResponse, AiResponseRoute, ChatMessage, ChatMessageRole, CreateFinanceAccountRequest, FinanceAccount, SendChatMessageRequest } from './types/chat.types'
