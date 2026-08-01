@@ -1,6 +1,6 @@
 import { normalizeApiError } from '@/shared/api/api-error'
 import { httpClient } from '@/shared/api/http-client'
-import type { AiChatResponse, SendChatMessageRequest } from '../types/chat.types'
+import type { AiChatResponse, Conversation, ConversationMessage, SendChatMessageRequest } from '../types/chat.types'
 
 function isAiChatResponse(value: unknown): value is AiChatResponse {
   if (!value || typeof value !== 'object') return false
@@ -44,6 +44,50 @@ export async function sendChatMessage(
     const { data } = await httpClient.post<unknown>('/ai/chat', request, { signal })
     if (!isAiChatResponse(data)) throw new Error('Invalid AI chat response.')
     return { ...data, message: normalizeToolCallMessage(data.message) }
+  } catch (error: unknown) {
+    throw normalizeApiError(error)
+  }
+}
+
+export async function getConversations(signal?: AbortSignal): Promise<Conversation[]> {
+  try {
+    const { data } = await httpClient.get<unknown>('/ai/conversations', { signal })
+    const conversations = Array.isArray(data)
+      ? data
+      : (data as { items?: unknown; data?: unknown })?.items ?? (data as { data?: unknown })?.data
+    if (!Array.isArray(conversations)) throw new Error('Invalid conversations response.')
+    return conversations as Conversation[]
+  } catch (error: unknown) {
+    throw normalizeApiError(error)
+  }
+}
+
+export async function getConversation(conversationId: number, signal?: AbortSignal): Promise<Conversation> {
+  try {
+    const { data } = await httpClient.get<Conversation>(`/ai/conversations/${conversationId}`, { signal })
+    if (!data || typeof data.id !== 'number' || !Array.isArray(data.messages)) throw new Error('Invalid conversation response.')
+    return data
+  } catch (error: unknown) {
+    throw normalizeApiError(error)
+  }
+}
+
+export async function getConversationMessages(
+  conversationId: number,
+  page = 1,
+  pageSize = 20,
+  signal?: AbortSignal,
+): Promise<ConversationMessage[]> {
+  try {
+    const { data } = await httpClient.get<unknown>(`/ai/conversations/${conversationId}/messages`, {
+      params: { page, page_size: pageSize },
+      signal,
+    })
+    const messages = Array.isArray(data)
+      ? data
+      : (data as { items?: unknown })?.items
+    if (!Array.isArray(messages)) throw new Error('Invalid conversation messages response.')
+    return messages as ConversationMessage[]
   } catch (error: unknown) {
     throw normalizeApiError(error)
   }

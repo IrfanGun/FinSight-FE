@@ -10,7 +10,7 @@ import { useChat } from '../composables/useChat'
 const router = useRouter()
 const authStore = useAuthStore()
 const userName = computed(() => authStore.currentUser?.fullName ?? 'Pengguna')
-const { input, isLoading, errorMessage, messages, handleSend, handleAccountCreationConfirmation } = useChat()
+const { input, isLoading, errorMessage, messages, conversations, isLoadingConversations, handleSend, handleAccountCreationConfirmation, selectConversation } = useChat()
 
 function handleSignOut(): void {
   authStore.signOut()
@@ -31,7 +31,16 @@ function handleSignOut(): void {
       </div>
     </header>
 
-    <main class="mx-auto flex max-w-4xl flex-col gap-6 px-5 py-8 sm:px-8">
+    <main class="mx-auto flex max-w-6xl gap-6 px-5 py-8 sm:px-8">
+      <aside class="sticky top-6 hidden max-h-[calc(100vh-7rem)] w-64 shrink-0 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:block">
+        <div class="mb-3 flex items-center justify-between px-2"><h2 class="m-0 text-sm font-semibold text-slate-700">Conversation</h2><i v-if="isLoadingConversations" class="pi pi-spin pi-spinner text-xs text-slate-400" /></div>
+        <div v-if="!conversations.length && !isLoadingConversations" class="px-2 py-4 text-xs text-slate-400">Belum ada conversation.</div>
+        <button v-for="conversation in conversations" :key="conversation.id" class="mb-1 w-full rounded-xl px-3 py-2 text-left text-sm transition hover:bg-brand-50" :class="conversation.id === undefined ? '' : 'text-slate-600'" @click="selectConversation(conversation.id)">
+          <span class="block truncate">{{ conversation.title || `Conversation #${conversation.id}` }}</span>
+          <span class="text-xs text-slate-400">{{ conversation.messages?.length || 0 }} pesan</span>
+        </button>
+      </aside>
+      <div class="min-w-0 flex-1">
       <header>
         <p class="mb-1 text-sm font-semibold text-brand-700">Chat</p>
         <h1 class="m-0 text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">Tanya FinSight AI</h1>
@@ -57,6 +66,7 @@ function handleSignOut(): void {
           <Button type="submit" label="Kirim" icon="pi pi-send" :loading="isLoading" :disabled="!input.trim()" />
         </form>
       </section>
+      </div>
     </main>
   </div>
 </template>

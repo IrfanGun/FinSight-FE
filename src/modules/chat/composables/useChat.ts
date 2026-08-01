@@ -1,9 +1,9 @@
 import { ref } from 'vue'
 
 import { useAuthStore } from '@/modules/auth/stores/auth.store'
-import { sendChatMessage } from '../api/chat.api'
+import { getConversationMessages, getConversations, sendChatMessage } from '../api/chat.api'
 import { createFinanceAccount } from '../api/finance-account.api'
-import type { ChatMessage, CreateFinanceAccountRequest, SendChatMessageRequest } from '../types/chat.types'
+import type { ChatMessage, Conversation, CreateFinanceAccountRequest, SendChatMessageRequest } from '../types/chat.types'
 
 const CASH_ACCOUNT_REQUEST: Omit<CreateFinanceAccountRequest, 'user_id'> = {
   name: 'Cash',
@@ -24,9 +24,36 @@ export function useChat() {
   const isLoading = ref(false)
   const errorMessage = ref('')
   const conversationId = ref<number>()
+  const conversations = ref<Conversation[]>([])
+  const isLoadingConversations = ref(false)
   const messages = ref<ChatMessage[]>([
     { id: 'welcome', role: 'assistant', content: 'Halo! Saya FinSight AI. Tanyakan apa saja tentang kondisi keuangan Anda.' },
   ])
+
+  function applyConversation(conversation: Conversation): void {
+    conversationId.value = conversation.id
+    messages.value = (conversation.messages ?? []).map((item) => ({ id: String(item.id), role: item.role, content: item.message }))
+  }
+
+  async function loadConversations(): Promise<void> {
+    isLoadingConversations.value = true
+    try { conversations.value = await getConversations() } catch { /* sidebar remains usable */ } finally { isLoadingConversations.value = false }
+  }
+
+  async function selectConversation(id: number): Promise<void> {
+    if (isLoading.value) return
+    try {
+      const conversation = conversations.value.find((item) => item.id === id)
+      const conversationMessages = await getConversationMessages(id)
+      applyConversation({
+        id,
+        title: conversation?.title ?? null,
+        created_at: conversation?.created_at ?? '',
+        updated_at: conversation?.updated_at ?? '',
+        messages: conversationMessages,
+      })
+    } catch (error: unknown) { errorMessage.value = error instanceof Error ? error.message : 'Riwayat message gagal dimuat.' }
+  }
 
   async function handleSend(): Promise<void> {
     const message = input.value.trim()
@@ -45,6 +72,16 @@ export function useChat() {
 
       const response = await sendChatMessage(request)
       conversationId.value = response.conversation_id
+
+      if (!conversations.value.some((item) => item.id === response.conversation_id)) {
+        conversations.value.unshift({
+          id: response.conversation_id,
+          title: message.slice(0, 60),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          messages: [],
+        })
+      }
 
       const requiresConfirmation = needsAccountCreationConfirmation(response.message)
       if (response.success || requiresConfirmation) {
@@ -93,5 +130,6 @@ export function useChat() {
     }
   }
 
-  return { input, isLoading, errorMessage, messages, handleSend, handleAccountCreationConfirmation }
+  void loadConversations()
+  return { input, isLoading, errorMessage, messages, conversations, isLoadingConversations, handleSend, handleAccountCreationConfirmation, selectConversation }
 }

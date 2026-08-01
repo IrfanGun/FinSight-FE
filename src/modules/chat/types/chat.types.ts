@@ -15,6 +15,23 @@ export interface ChatMessage {
   requiresAccountCreationConfirmation?: boolean
 }
 
+export interface ConversationMessage {
+  id: number
+  role: ChatMessageRole
+  message: string
+  intent: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface Conversation {
+  id: number
+  title: string | null
+  created_at: string
+  updated_at: string
+  messages?: ConversationMessage[]
+}
+
 export interface CreateFinanceAccountRequest {
   user_id: number
   name: string
