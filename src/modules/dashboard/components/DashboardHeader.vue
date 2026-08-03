@@ -7,7 +7,13 @@ interface Props {
 
 defineProps<Props>()
 
-const emit = defineEmits<{ signOut: [] }>()
+const emit = defineEmits<{
+  signOut: []
+  dateFilter: [{ key: 'from' | 'to'; value: string }]
+}>()
+function changeDateFilter(event: Event, key: 'from' | 'to'): void {
+  emit('dateFilter', { key, value: (event.target as HTMLInputElement).value })
+}
 </script>
 
 <template>
@@ -17,6 +23,8 @@ const emit = defineEmits<{ signOut: [] }>()
       <span>FinSight<span class="text-brand-500">AI</span></span>
     </a>
     <div class="flex items-center gap-3">
+      <label class="hidden items-center gap-1 text-xs text-slate-500 md:flex">Dari <input type="date" class="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700" @change="changeDateFilter($event, 'from')" /></label>
+      <label class="hidden items-center gap-1 text-xs text-slate-500 md:flex">Sampai <input type="date" class="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700" @change="changeDateFilter($event, 'to')" /></label>
       <span class="hidden text-sm text-slate-500 sm:inline">Halo, {{ userName }}</span>
       <Button label="Chat" icon="pi pi-comments" size="small" @click="$router.push({ name: 'chat' })" />
       <Button aria-label="Keluar" icon="pi pi-sign-out" severity="secondary" text rounded @click="emit('signOut')" />

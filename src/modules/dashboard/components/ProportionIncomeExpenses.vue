@@ -30,7 +30,7 @@ const chartOptions: ChartOptions<'doughnut'> = {
     legend: { display: false },
     tooltip: {
       callbacks: {
-        label: (context) => ` ${context.label}: ${context.parsed}%`,
+        label: (context) => ` ${context.label}: ${Math.round(context.parsed)}%`,
       },
     },
   },
@@ -44,7 +44,7 @@ const chartOptions: ChartOptions<'doughnut'> = {
       <div class="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         <div class="relative size-40 shrink-0"><Doughnut :data="chartData" :options="chartOptions" /></div>
         <div class="grid w-full gap-3">
-          <div v-for="(item, index) in current" :key="item.label" class="flex items-center justify-between gap-3 text-sm"><span class="flex items-center gap-2 text-slate-500"><span class="size-2.5 rounded-full" :class="['bg-brand-700', 'bg-brand-400', 'bg-amber-400', 'bg-slate-300'][index % 4]"></span>{{ item.label }}</span><strong class="text-slate-700">{{ item.percentage }}%</strong></div>
+          <div v-for="(item, index) in current" :key="item.label" class="flex items-center justify-between gap-3 text-sm"><span class="flex items-center gap-2 text-slate-500"><span class="size-2.5 rounded-full" :class="['bg-brand-700', 'bg-brand-400', 'bg-amber-400', 'bg-slate-300'][index % 4]"></span>{{ item.label }}</span><strong class="text-slate-700">{{ Math.round(item.percentage) }}%</strong></div>
         </div>
       </div>
     </template>

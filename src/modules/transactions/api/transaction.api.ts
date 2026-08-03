@@ -2,6 +2,10 @@ import { normalizeApiError } from '@/shared/api/api-error'
 import { httpClient } from '@/shared/api/http-client'
 import { mapTransactionListResponse, mapTransactionResponse } from '../lib/transaction.mapper'
 import type { ListTransactionsParams, Transaction, TransactionListResponse } from '../types/transaction.types'
+export interface TransactionPayload { user_id: number; type: 'income' | 'expense'; amount: number; transaction_date: string; category_id: number; from_account_id: number; description?: string }
+export async function createTransaction(payload: TransactionPayload): Promise<Transaction> { try { const { data } = await httpClient.post<unknown>('/transactions', payload); return mapTransactionResponse(data) } catch (e) { throw normalizeApiError(e) } }
+export async function updateTransaction(id: number, userId: number, payload: Partial<Omit<TransactionPayload, 'user_id'>>): Promise<Transaction> { try { const { data } = await httpClient.put<unknown>(`/transactions/${id}`, payload, { params: { user_id: userId } }); return mapTransactionResponse(data) } catch (e) { throw normalizeApiError(e) } }
+export async function deleteTransaction(id: number, userId: number): Promise<void> { try { await httpClient.delete(`/transactions/${id}`, { params: { user_id: userId } }) } catch (e) { throw normalizeApiError(e) } }
 
 /** Mengambil transaksi milik user dengan pagination dan filter opsional. */
 export async function listTransactions(

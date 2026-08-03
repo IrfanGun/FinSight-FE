@@ -4,8 +4,11 @@ import type { AssetAccount } from '../api/asset.api'
 
 export function useAssetAccounts(userId: Ref<number | undefined>) {
   const accounts = ref<AssetAccount[]>([])
-  watch(userId, async (id) => {
+  async function fetchAccounts(id = userId.value): Promise<void> {
     accounts.value = id ? await getAssetAccounts(id) : []
+  }
+  watch(userId, async (id) => {
+    await fetchAccounts(id)
   }, { immediate: true })
-  return { accounts }
+  return { accounts, fetchAccounts }
 }

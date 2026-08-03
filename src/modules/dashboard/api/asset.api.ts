@@ -126,7 +126,8 @@ export async function getAssetAccounts(
 
   try {
     const { data } = await httpClient.get<unknown>(
-      '/finance-accounts/assets',
+      // Backend hanya menyediakan endpoint umum finance-accounts.
+      '/finance-accounts',
       {
         params: {
           user_id: userId,
@@ -146,4 +147,3 @@ export async function getAssetTotals(userId: number) {
   const total = (type: string) => accounts.filter((account) => account.type === type).reduce((sum, account) => sum + account.balance, 0)
   return { wallet: total('wallet'), bank: total('bank'), investment: total('investment'), walletCount: accounts.filter((a) => a.type === 'wallet').length, bankCount: accounts.filter((a) => a.type === 'bank').length, investmentCount: accounts.filter((a) => a.type === 'investment').length }
 }
-
